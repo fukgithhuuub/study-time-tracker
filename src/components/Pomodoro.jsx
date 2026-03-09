@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Coffee, BookOpen } from 'lucide-react';
+import { Play, Pause, RotateCcw, Coffee, BookOpen, Settings, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Pomodoro({
@@ -13,8 +13,13 @@ export function Pomodoro({
   setMode,
   selectedSubjectId,
   setSelectedSubjectId,
-  modes: appModes
+  modes: appModes,
+  intervals,
+  setIntervals
 }) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [tempIntervals, setTempIntervals] = useState(intervals);
+
   const modes = {
     work: { ...appModes.work, color: 'bg-red-500', icon: BookOpen },
     'short-break': { ...appModes['short-break'], color: 'bg-teal-500', icon: Coffee },
@@ -63,28 +68,87 @@ export function Pomodoro({
     setTimeLeft(modes[mode].time);
   };
 
+  const handleSaveSettings = () => {
+    setIntervals(tempIntervals);
+    setShowSettings(false);
+    if (!isRunning) {
+      setTimeLeft(tempIntervals[mode === 'work' ? 'work' : mode === 'short-break' ? 'short' : 'long'] * 60);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/50 backdrop-blur-3xl rounded-[3rem] border border-zinc-800 shadow-2xl max-w-2xl mx-auto space-y-12 relative overflow-hidden group">
+    <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/40 backdrop-blur-[100px] rounded-[3rem] border border-zinc-800/50 shadow-2xl max-w-2xl mx-auto space-y-12 relative overflow-hidden group ring-1 ring-white/5 transition-all duration-700">
       <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
         <BookOpen size={320} />
       </div>
 
-      <div className="flex gap-4 p-2 bg-zinc-950/80 rounded-[1.5rem] border border-zinc-800 relative">
-        {Object.entries(modes).map(([key, value]) => (
-          <button
-            key={key}
-            onClick={() => handleModeChange(key)}
-            className={cn(
-              "px-8 py-3 rounded-2xl text-sm font-black transition-all duration-300 tracking-widest uppercase",
-              mode === key ? `${value.color} text-white shadow-xl` : "text-zinc-600 hover:text-zinc-300"
-            )}
-          >
-            {value.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-4 w-full relative z-10">
+        <div className="flex-1 flex gap-4 p-2 bg-zinc-950/80 rounded-[1.5rem] border border-zinc-800 relative">
+          {Object.entries(modes).map(([key, value]) => (
+            <button
+              key={key}
+              onClick={() => handleModeChange(key)}
+              className={cn(
+                "flex-1 px-4 py-3 rounded-2xl text-xs font-black transition-all duration-300 tracking-widest uppercase truncate",
+                mode === key ? `${value.color} text-white shadow-xl` : "text-zinc-600 hover:text-zinc-300"
+              )}
+            >
+              {value.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-zinc-500 hover:text-white transition-colors"
+        >
+          <Settings size={24} />
+        </button>
       </div>
 
-      <div className="relative w-80 h-80 flex items-center justify-center">
+      {showSettings && (
+        <div className="w-full bg-zinc-950/50 p-6 rounded-[2rem] border border-zinc-800 animate-in zoom-in-95 duration-300 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">Timer Settings (Minutes)</h3>
+            <button onClick={handleSaveSettings} className="p-2 bg-emerald-600 rounded-xl text-white">
+              <Check size={20} />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black text-zinc-600">Work</label>
+              <input
+                type="number"
+                value={tempIntervals.work}
+                onChange={(e) => setTempIntervals({...tempIntervals, work: parseInt(e.target.value) || 1})}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black text-zinc-600">Short</label>
+              <input
+                type="number"
+                value={tempIntervals.short}
+                onChange={(e) => setTempIntervals({...tempIntervals, short: parseInt(e.target.value) || 1})}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-teal-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black text-zinc-600">Long</label>
+              <input
+                type="number"
+                value={tempIntervals.long}
+                onChange={(e) => setTempIntervals({...tempIntervals, long: parseInt(e.target.value) || 1})}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={cn(
+        "relative w-80 h-80 flex items-center justify-center transition-all duration-1000",
+        isRunning ? "scale-110" : "scale-100"
+      )}>
         <svg className="w-full h-full -rotate-90 filter drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]">
           <circle
             cx="160"
@@ -108,8 +172,18 @@ export function Pomodoro({
           />
         </svg>
         <div className="absolute flex flex-col items-center">
-          <span className="text-8xl font-mono font-black text-white tracking-tighter">{formatTime(timeLeft)}</span>
-          <span className="text-zinc-500 font-black uppercase tracking-[0.3em] mt-4 text-xs">{modes[mode].label}ING...</span>
+          <span className={cn(
+            "text-8xl font-mono font-black text-white tracking-tighter transition-colors duration-500",
+            isRunning && modes[mode].color.replace('bg-', 'text-')
+          )}>
+            {formatTime(timeLeft)}
+          </span>
+          <span className={cn(
+            "text-zinc-500 font-black uppercase tracking-[0.3em] mt-4 text-xs",
+            isRunning && "animate-pulse"
+          )}>
+            {modes[mode].label}ING...
+          </span>
         </div>
       </div>
 

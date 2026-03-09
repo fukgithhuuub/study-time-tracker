@@ -53,23 +53,26 @@ export function Stopwatch({
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   return (
-    <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/50 backdrop-blur-3xl rounded-[3rem] border border-zinc-800 shadow-2xl max-w-2xl mx-auto space-y-12 relative overflow-hidden group">
+    <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/40 backdrop-blur-[100px] rounded-[3rem] border border-zinc-800/50 shadow-2xl max-w-2xl mx-auto space-y-12 relative overflow-hidden group ring-1 ring-white/5 transition-all duration-700">
       <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
         <Timer size={320} />
       </div>
 
       <div className="flex items-center gap-4 text-blue-500 relative">
         <div className="p-3 bg-blue-600/10 rounded-2xl border border-blue-500/20">
-          <Timer size={32} />
+          <Timer size={32} className={cn(isRunning && "animate-spin duration-1000")} />
         </div>
         <h2 className="text-2xl font-black uppercase tracking-[0.3em]">Stopwatch</h2>
       </div>
 
-      <div className="text-[10rem] font-mono font-black leading-none text-white tracking-tighter drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] relative">
+      <div className={cn(
+        "text-[10rem] font-mono font-black leading-none text-white tracking-tighter drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] relative transition-all duration-500",
+        isRunning ? "scale-110 text-blue-400" : "scale-100"
+      )}>
         {formatTime(time)}
       </div>
 
-      <div className="w-full max-w-sm space-y-4 relative">
+      <div className="w-full max-w-sm space-y-4 relative z-10">
         <div className="flex flex-col gap-3">
           <label className="text-xs font-black uppercase tracking-widest text-zinc-600 ml-1">Assign to Subject</label>
           <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
@@ -100,7 +103,7 @@ export function Stopwatch({
         </div>
       </div>
 
-      <div className="flex gap-6 w-full max-w-sm relative">
+      <div className="flex gap-6 w-full max-w-sm relative z-10">
         <button
           onClick={handleStartPause}
           className={cn(

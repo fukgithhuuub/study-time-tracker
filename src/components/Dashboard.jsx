@@ -2,6 +2,17 @@ import React, { useMemo } from 'react';
 import { Clock, CheckSquare, Target, Trophy, Calendar, Edit2, Check } from 'lucide-react';
 import { isToday, parseISO, format, isWithinInterval, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
 
+const QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+  { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "Your talent is God's gift to you. What you do with it is your gift back to God.", author: "Leo Buscaglia" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Success is the sum of small efforts, repeated day-in and day-out.", author: "Robert Collier" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" }
+];
+
 export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }) {
   const [isEditingGoal, setIsEditingGoal] = React.useState(false);
   const [tempGoal, setTempGoal] = React.useState(dailyGoal);
@@ -31,6 +42,15 @@ export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }
     return subject ? subject.name : "None";
   }, [sessions, subjects]);
 
+  const quote = useMemo(() => {
+    const today = new Date().toDateString();
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) {
+      hash = today.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return QUOTES[Math.abs(hash) % QUOTES.length];
+  }, []);
+
   const streak = useMemo(() => {
     if (sessions.length === 0) return 0;
     const dates = sessions.map(s => format(parseISO(s.timestamp), 'yyyy-MM-dd'));
@@ -54,14 +74,20 @@ export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header className="mb-8">
-        <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">Welcome Back!</h1>
-        <p className="text-zinc-400 text-lg">Track your progress and stay productive.</p>
+      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">Welcome Back!</h1>
+          <p className="text-zinc-400 text-lg">Track your progress and stay productive.</p>
+        </div>
+        <div className="md:max-w-md bg-zinc-900/30 border border-zinc-800/50 p-4 rounded-2xl italic text-sm text-zinc-500 relative">
+          <div className="absolute -top-3 left-4 px-2 bg-black text-[10px] font-black uppercase tracking-widest text-zinc-600">Daily Inspiration</div>
+          "{quote.text}" — <span className="font-bold text-zinc-400">{quote.author}</span>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="bg-zinc-900/50 backdrop-blur-xl p-8 rounded-[2rem] border border-zinc-800 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
             <Target size={120} />
           </div>
           <div className="flex items-center justify-between mb-6">
@@ -116,7 +142,7 @@ export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }
         </div>
 
         <div className="bg-zinc-900/50 backdrop-blur-xl p-8 rounded-[2rem] border border-zinc-800 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
             <CheckSquare size={120} />
           </div>
           <div className="flex items-center justify-between mb-6">

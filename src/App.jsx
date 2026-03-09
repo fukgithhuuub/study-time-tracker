@@ -17,6 +17,7 @@ import { SubjectManager } from './components/SubjectManager';
 import { Analytics } from './components/Analytics';
 import { TaskList } from './components/TaskList';
 import { SyncSettings } from './components/SyncSettings';
+import { Soundscapes } from './components/Soundscapes';
 import { cn } from './lib/utils';
 import { parseISO, format, differenceInDays } from 'date-fns';
 
@@ -31,6 +32,12 @@ function App() {
   const [dailyGoal, setDailyGoal] = useLocalStorage('study-daily-goal', 180);
   const [secretKey, setSecretKey] = useLocalStorage('study-secret-key', '');
   const [timerMode, setTimerMode] = useState('stopwatch'); // 'stopwatch' or 'pomodoro'
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [pomodoroIntervals, setPomodoroIntervals] = useLocalStorage('study-pomo-intervals', {
+    work: 25,
+    short: 5,
+    long: 15
+  });
 
   // Stopwatch state
   const [stopwatchTime, setStopwatchTime] = useState(0);
@@ -38,11 +45,11 @@ function App() {
   const [stopwatchSubjectId, setStopwatchSubjectId] = useState('');
 
   // Pomodoro state
-  const pomodoroModes = {
-    work: { label: 'Work', time: 25 * 60 },
-    'short-break': { label: 'Short Break', time: 5 * 60 },
-    'long-break': { label: 'Long Break', time: 15 * 60 },
-  };
+  const pomodoroModes = React.useMemo(() => ({
+    work: { label: 'Work', time: pomodoroIntervals.work * 60 },
+    'short-break': { label: 'Short Break', time: pomodoroIntervals.short * 60 },
+    'long-break': { label: 'Long Break', time: pomodoroIntervals.long * 60 },
+  }), [pomodoroIntervals]);
   const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(pomodoroModes.work.time);
   const [isPomodoroRunning, setIsPomodoroRunning] = useState(false);
   const [pomodoroMode, setPomodoroMode] = useState('work');
@@ -154,25 +161,37 @@ function App() {
       case 'timer':
         return (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="flex justify-center gap-4 mb-4">
+            <div className="flex justify-between items-center mb-4">
               <button
-                onClick={() => setTimerMode('stopwatch')}
+                onClick={() => setIsFocusMode(!isFocusMode)}
                 className={cn(
-                  "px-8 py-3 rounded-2xl font-bold transition-all duration-300 shadow-xl",
-                  timerMode === 'stopwatch' ? "bg-blue-600 text-white shadow-blue-900/40 scale-105" : "bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800"
+                  "px-6 py-3 rounded-2xl font-bold transition-all duration-300 border",
+                  isFocusMode ? "bg-purple-600 text-white border-purple-500" : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300"
                 )}
               >
-                Stopwatch
+                {isFocusMode ? "Exit Focus Mode" : "Focus Mode"}
               </button>
-              <button
-                onClick={() => setTimerMode('pomodoro')}
-                className={cn(
-                  "px-8 py-3 rounded-2xl font-bold transition-all duration-300 shadow-xl",
-                  timerMode === 'pomodoro' ? "bg-rose-600 text-white shadow-rose-900/40 scale-105" : "bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800"
-                )}
-              >
-                Pomodoro
-              </button>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setTimerMode('stopwatch')}
+                  className={cn(
+                    "px-8 py-3 rounded-2xl font-bold transition-all duration-300 shadow-xl",
+                    timerMode === 'stopwatch' ? "bg-blue-600 text-white shadow-blue-900/40 scale-105" : "bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800"
+                  )}
+                >
+                  Stopwatch
+                </button>
+                <button
+                  onClick={() => setTimerMode('pomodoro')}
+                  className={cn(
+                    "px-8 py-3 rounded-2xl font-bold transition-all duration-300 shadow-xl",
+                    timerMode === 'pomodoro' ? "bg-rose-600 text-white shadow-rose-900/40 scale-105" : "bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800"
+                  )}
+                >
+                  Pomodoro
+                </button>
+              </div>
             </div>
             {timerMode === 'stopwatch' ? (
               <Stopwatch
@@ -198,8 +217,11 @@ function App() {
                 selectedSubjectId={pomodoroSubjectId}
                 setSelectedSubjectId={setPomodoroSubjectId}
                 modes={pomodoroModes}
+                intervals={pomodoroIntervals}
+                setIntervals={setPomodoroIntervals}
               />
             )}
+            <Soundscapes />
           </div>
         );
       case 'subjects':
@@ -229,7 +251,10 @@ function App() {
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-500/30 selection:text-blue-200">
       {/* Sidebar */}
-      <aside className="w-72 bg-zinc-900/80 backdrop-blur-2xl border-r border-zinc-800 flex flex-col fixed h-full z-50">
+      <aside className={cn(
+        "w-72 bg-zinc-900/80 backdrop-blur-2xl border-r border-zinc-800 flex flex-col fixed h-full z-50 transition-transform duration-500",
+        isFocusMode && activeTab === 'timer' ? "-translate-x-full" : "translate-x-0"
+      )}>
         <div className="p-8">
           <div className="flex items-center gap-4 mb-12">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-[1rem] flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)]">
@@ -278,7 +303,10 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-72 p-12 bg-zinc-950 overflow-y-auto min-h-screen">
+      <main className={cn(
+        "flex-1 p-12 bg-zinc-950 overflow-y-auto min-h-screen transition-all duration-500",
+        isFocusMode && activeTab === 'timer' ? "ml-0" : "ml-72"
+      )}>
         <div className="max-w-6xl mx-auto pb-20">
           {renderContent()}
         </div>
