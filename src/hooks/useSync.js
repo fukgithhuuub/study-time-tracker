@@ -7,7 +7,14 @@ export function useSync(secretKey, subjects, sessions, tasks, setSubjects, setSe
   const [error, setError] = useState(null);
 
   const syncToCloud = useCallback(async () => {
-    if (!supabase || !secretKey) return;
+    if (!supabase) {
+      setError("Cloud sync is not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+      return;
+    }
+    if (!secretKey) {
+      setError("Please set a secret key first.");
+      return;
+    }
 
     setIsSyncing(true);
     setError(null);
@@ -30,14 +37,21 @@ export function useSync(secretKey, subjects, sessions, tasks, setSubjects, setSe
       setLastSynced(new Date());
     } catch (err) {
       console.error('Sync to cloud failed:', err);
-      setError(err.message);
+      setError(err.message || "An unknown error occurred during cloud backup.");
     } finally {
       setIsSyncing(false);
     }
   }, [secretKey, subjects, sessions, tasks]);
 
   const syncFromCloud = useCallback(async () => {
-    if (!supabase || !secretKey) return;
+    if (!supabase) {
+      setError("Cloud sync is not configured.");
+      return;
+    }
+    if (!secretKey) {
+      setError("Please set a secret key first.");
+      return;
+    }
 
     setIsSyncing(true);
     setError(null);
@@ -49,17 +63,23 @@ export function useSync(secretKey, subjects, sessions, tasks, setSubjects, setSe
         .eq('secret_key', secretKey)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          setError("No cloud backup found for this secret key.");
+          return;
+        }
+        throw fetchError;
+      }
 
       if (data) {
-        if (data.subjects) setSubjects(data.subjects);
-        if (data.sessions) setSessions(data.sessions);
-        if (data.tasks) setTasks(data.tasks);
+        if (Array.isArray(data.subjects)) setSubjects(data.subjects);
+        if (Array.isArray(data.sessions)) setSessions(data.sessions);
+        if (Array.isArray(data.tasks)) setTasks(data.tasks);
         setLastSynced(new Date(data.updated_at));
       }
     } catch (err) {
       console.error('Sync from cloud failed:', err);
-      setError(err.message);
+      setError(err.message || "An unknown error occurred during restoration.");
     } finally {
       setIsSyncing(false);
     }
