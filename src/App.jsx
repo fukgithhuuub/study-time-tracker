@@ -28,15 +28,82 @@ function App() {
   ]);
   const [sessions, setSessions] = useLocalStorage('study-sessions', []);
   const [tasks, setTasks] = useLocalStorage('study-tasks', []);
+  const [dailyGoal, setDailyGoal] = useLocalStorage('study-daily-goal', 180);
   const [secretKey, setSecretKey] = useLocalStorage('study-secret-key', '');
   const [timerMode, setTimerMode] = useState('stopwatch'); // 'stopwatch' or 'pomodoro'
+
+  // Stopwatch state
+  const [stopwatchTime, setStopwatchTime] = useState(0);
+  const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
+  const [stopwatchSubjectId, setStopwatchSubjectId] = useState('');
+
+  // Pomodoro state
+  const pomodoroModes = {
+    work: { label: 'Work', time: 25 * 60 },
+    'short-break': { label: 'Short Break', time: 5 * 60 },
+    'long-break': { label: 'Long Break', time: 15 * 60 },
+  };
+  const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(pomodoroModes.work.time);
+  const [isPomodoroRunning, setIsPomodoroRunning] = useState(false);
+  const [pomodoroMode, setPomodoroMode] = useState('work');
+  const [pomodoroSubjectId, setPomodoroSubjectId] = useState('');
 
   const { isSyncing, lastSynced, error, syncToCloud, syncFromCloud } = useSync(
     secretKey, subjects, sessions, tasks, setSubjects, setSessions, setTasks
   );
 
+  // Auto-sync effect with debounce
+  React.useEffect(() => {
+    if (!secretKey) return;
+
+    const timeoutId = setTimeout(() => {
+      syncToCloud();
+    }, 5000); // 5 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [subjects, sessions, tasks, secretKey, syncToCloud]);
+
   const handleSaveSession = (session) => {
     setSessions([session, ...sessions]);
+  };
+
+  // Global Timer logic
+  React.useEffect(() => {
+    let interval;
+    if (isStopwatchRunning) {
+      interval = setInterval(() => {
+        setStopwatchTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isStopwatchRunning]);
+
+  React.useEffect(() => {
+    let interval;
+    if (isPomodoroRunning && pomodoroTimeLeft > 0) {
+      interval = setInterval(() => {
+        setPomodoroTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (pomodoroTimeLeft === 0 && isPomodoroRunning) {
+      setIsPomodoroRunning(false);
+      handlePomodoroComplete();
+    }
+    return () => clearInterval(interval);
+  }, [isPomodoroRunning, pomodoroTimeLeft]);
+
+  const handlePomodoroComplete = () => {
+    if (pomodoroMode === 'work' && pomodoroSubjectId) {
+      handleSaveSession({
+        id: Date.now().toString(),
+        subjectId: pomodoroSubjectId,
+        duration: pomodoroModes.work.time,
+        timestamp: new Date().toISOString(),
+        type: 'pomodoro'
+      });
+      alert("Great job! Session complete. Take a break!");
+    } else {
+      alert("Break complete! Ready to focus?");
+    }
   };
 
   const streak = React.useMemo(() => {
@@ -83,7 +150,7 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard sessions={sessions} subjects={subjects} tasks={tasks} />;
+        return <Dashboard sessions={sessions} subjects={subjects} tasks={tasks} dailyGoal={dailyGoal} setDailyGoal={setDailyGoal} />;
       case 'timer':
         return (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
@@ -108,9 +175,30 @@ function App() {
               </button>
             </div>
             {timerMode === 'stopwatch' ? (
-              <Stopwatch subjects={subjects} onSaveSession={handleSaveSession} />
+              <Stopwatch
+                subjects={subjects}
+                onSaveSession={handleSaveSession}
+                time={stopwatchTime}
+                setTime={setStopwatchTime}
+                isRunning={isStopwatchRunning}
+                setIsRunning={setIsStopwatchRunning}
+                selectedSubjectId={stopwatchSubjectId}
+                setSelectedSubjectId={setStopwatchSubjectId}
+              />
             ) : (
-              <Pomodoro subjects={subjects} onSaveSession={handleSaveSession} />
+              <Pomodoro
+                subjects={subjects}
+                onSaveSession={handleSaveSession}
+                timeLeft={pomodoroTimeLeft}
+                setTimeLeft={setPomodoroTimeLeft}
+                isRunning={isPomodoroRunning}
+                setIsRunning={setIsPomodoroRunning}
+                mode={pomodoroMode}
+                setMode={setPomodoroMode}
+                selectedSubjectId={pomodoroSubjectId}
+                setSelectedSubjectId={setPomodoroSubjectId}
+                modes={pomodoroModes}
+              />
             )}
           </div>
         );

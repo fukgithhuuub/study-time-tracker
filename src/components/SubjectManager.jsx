@@ -9,7 +9,8 @@ export function SubjectManager({ subjects, setSubjects }) {
   const [editValue, setEditValue] = useState({ name: '', color: '#3b82f6' });
 
   const colors = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e', '#a855f7', '#14b8a6'
+    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e', '#a855f7', '#14b8a6',
+    '#fbbf24', '#2dd4bf', '#818cf8', '#fb7185', '#9ca3af', '#4ade80', '#60a5fa', '#f87171', '#c084fc', '#22d3ee'
   ];
 
   const handleAdd = () => {
@@ -80,7 +81,7 @@ export function SubjectManager({ subjects, setSubjects }) {
               <h3 className="text-xl font-bold flex items-center gap-3">
                  <Palette size={20} className="text-zinc-500" /> Choose Theme Color
               </h3>
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-5 md:grid-cols-10 gap-4">
                 {colors.map(color => (
                   <button
                     key={color}

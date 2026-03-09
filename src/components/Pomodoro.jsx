@@ -2,32 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Coffee, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export function Pomodoro({ subjects, onSaveSession }) {
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [mode, setMode] = useState('work'); // 'work', 'short-break', 'long-break'
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const timerRef = useRef(null);
-
+export function Pomodoro({
+  subjects,
+  onSaveSession,
+  timeLeft,
+  setTimeLeft,
+  isRunning,
+  setIsRunning,
+  mode,
+  setMode,
+  selectedSubjectId,
+  setSelectedSubjectId,
+  modes: appModes
+}) {
   const modes = {
-    work: { label: 'Work', time: 25 * 60, color: 'bg-red-500', icon: BookOpen },
-    'short-break': { label: 'Short Break', time: 5 * 60, color: 'bg-teal-500', icon: Coffee },
-    'long-break': { label: 'Long Break', time: 15 * 60, color: 'bg-blue-500', icon: Coffee },
+    work: { ...appModes.work, color: 'bg-red-500', icon: BookOpen },
+    'short-break': { ...appModes['short-break'], color: 'bg-teal-500', icon: Coffee },
+    'long-break': { ...appModes['long-break'], color: 'bg-blue-500', icon: Coffee },
   };
-
-  useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsRunning(false);
-      handleSessionComplete();
-    } else {
-      clearInterval(timerRef.current);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [isRunning, timeLeft]);
 
   const handleSessionComplete = () => {
     if (mode === 'work' && selectedSubjectId) {

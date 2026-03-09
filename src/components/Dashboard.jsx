@@ -1,12 +1,15 @@
 import React, { useMemo } from 'react';
-import { Clock, CheckSquare, Target, Trophy, Calendar } from 'lucide-react';
+import { Clock, CheckSquare, Target, Trophy, Calendar, Edit2, Check } from 'lucide-react';
 import { isToday, parseISO, format, isWithinInterval, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
 
-export function Dashboard({ sessions, subjects, tasks }) {
+export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }) {
+  const [isEditingGoal, setIsEditingGoal] = React.useState(false);
+  const [tempGoal, setTempGoal] = React.useState(dailyGoal);
+
   const todaySessions = useMemo(() => sessions.filter(s => isToday(parseISO(s.timestamp))), [sessions]);
   const totalMinutesToday = useMemo(() => todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60, [todaySessions]);
 
-  const dailyGoalMinutes = 180; // 3-hour goal
+  const dailyGoalMinutes = dailyGoal;
   const progress = Math.min((totalMinutesToday / dailyGoalMinutes) * 100, 100);
 
   const completedTasks = tasks.filter(t => t.completed).length;
@@ -68,7 +71,38 @@ export function Dashboard({ sessions, subjects, tasks }) {
               </div>
               Daily Study Goal
             </h2>
-            <span className="text-zinc-400 font-mono text-lg">{Math.round(totalMinutesToday)} / {dailyGoalMinutes}m</span>
+            <div className="flex items-center gap-3">
+              {isEditingGoal ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={tempGoal}
+                    onChange={(e) => setTempGoal(parseInt(e.target.value) || 0)}
+                    className="w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => {
+                      setDailyGoal(tempGoal);
+                      setIsEditingGoal(false);
+                    }}
+                    className="p-1 hover:bg-zinc-800 rounded text-emerald-500"
+                  >
+                    <Check size={16} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-zinc-400 font-mono text-lg">{Math.round(totalMinutesToday)} / {dailyGoalMinutes}m</span>
+                  <button
+                    onClick={() => setIsEditingGoal(true)}
+                    className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-blue-400 transition-colors"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden mb-6">
             <div

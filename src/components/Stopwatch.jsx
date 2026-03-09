@@ -3,23 +3,16 @@ import { Play, Pause, Square, Save, Timer, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 
-export function Stopwatch({ subjects, onSaveSession }) {
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTime(prev => prev + 1);
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [isRunning]);
-
+export function Stopwatch({
+  subjects,
+  onSaveSession,
+  time,
+  setTime,
+  isRunning,
+  setIsRunning,
+  selectedSubjectId,
+  setSelectedSubjectId
+}) {
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
