@@ -12,7 +12,7 @@ export const UserProvider = ({ children }) => {
         }
         const saved = localStorage.getItem('study-tracker-user');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) { }
+            try { return JSON.parse(saved); } catch { /* ignore */ }
         }
         return null;
     });
