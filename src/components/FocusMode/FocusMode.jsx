@@ -31,6 +31,29 @@ const FocusMode = ({ onSessionComplete, currentSubject }) => {
         return () => document.removeEventListener('fullscreenchange', handleFsChange);
     }, []);
 
+    // Keyboard shortcut handler for focus mode
+    useEffect(() => {
+        const handleShortcut = (e) => {
+            if (e.detail === 'toggle-focus') {
+                setIsActive(prev => !prev);
+            } else if (e.detail === 'close' && isActive) {
+                if (time > 0) {
+                    if (window.confirm('You have unsaved study time. Exit anyway?')) {
+                        setIsFocusActive(false);
+                        setTime(0);
+                        setIsActive(false);
+                        if (document.fullscreenElement) document.exitFullscreen?.();
+                    }
+                } else {
+                    setIsActive(false);
+                    if (document.fullscreenElement) document.exitFullscreen?.();
+                }
+            }
+        };
+        window.addEventListener('studyflow-shortcut', handleShortcut);
+        return () => window.removeEventListener('studyflow-shortcut', handleShortcut);
+    }, [isActive, time]);
+
     // Timer tick
     useEffect(() => {
         if (isFocusActive) {

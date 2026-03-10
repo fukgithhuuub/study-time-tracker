@@ -108,6 +108,43 @@ function App() {
     }
   }, [sessions, user]);
 
+  // ─── Keyboard Shortcut Handler ────────────────────────────
+  const handleShortcut = useCallback((action) => {
+    switch (action) {
+      case 'tab-timer':
+        setActiveTab('timer');
+        break;
+      case 'tab-dashboard':
+        setActiveTab('dashboard');
+        break;
+      case 'tab-profile':
+        setActiveTab('profile');
+        break;
+      case 'toggle-timer':
+        // Dispatch a custom event the Timer can listen for
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'toggle-timer' }));
+        break;
+      case 'reset-timer':
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'reset-timer' }));
+        break;
+      case 'save-session':
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'save-session' }));
+        break;
+      case 'switch-mode':
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'switch-mode' }));
+        break;
+      case 'toggle-focus':
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'toggle-focus' }));
+        break;
+      case 'close':
+        // General close action — handled by individual components
+        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'close' }));
+        break;
+      default:
+        break;
+    }
+  }, []);
+
   if (!user) return <Onboarding />;
 
   // ─── Session CRUD ─────────────────────────────────────────
@@ -193,42 +230,7 @@ function App() {
     }
   };
 
-  // ─── Keyboard Shortcut Handler ────────────────────────────
-  const handleShortcut = useCallback((action) => {
-    switch (action) {
-      case 'tab-timer':
-        setActiveTab('timer');
-        break;
-      case 'tab-dashboard':
-        setActiveTab('dashboard');
-        break;
-      case 'tab-profile':
-        setActiveTab('profile');
-        break;
-      case 'toggle-timer':
-        // Dispatch a custom event the Timer can listen for
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'toggle-timer' }));
-        break;
-      case 'reset-timer':
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'reset-timer' }));
-        break;
-      case 'save-session':
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'save-session' }));
-        break;
-      case 'switch-mode':
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'switch-mode' }));
-        break;
-      case 'toggle-focus':
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'toggle-focus' }));
-        break;
-      case 'close':
-        // General close action — handled by individual components
-        window.dispatchEvent(new CustomEvent('studyflow-shortcut', { detail: 'close' }));
-        break;
-      default:
-        break;
-    }
-  }, []);
+
 
   return (
     <div className="app-container">
