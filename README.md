@@ -1,2 +1,0 @@
-# study-time-tracker
-hi
