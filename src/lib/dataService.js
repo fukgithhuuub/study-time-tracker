@@ -195,6 +195,16 @@ export async function upsertSettings(userId, settings) {
     if (error) throw new Error(`upsertSettings: ${error.message}`);
 }
 
+// ─── Keep-alive Ping ─────────────────────────────────────────
+
+export async function pingSupabase() {
+    try {
+        await supabase.from('sf_users').select('id').limit(1);
+    } catch (err) {
+        console.error('Failed to ping Supabase:', err);
+    }
+}
+
 // ─── Bulk Clear ──────────────────────────────────────────────
 
 export async function clearAllUserData(userId) {

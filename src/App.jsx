@@ -38,6 +38,24 @@ function App() {
   const timerRef = useRef(null);
   const focusModeRef = useRef(null);
 
+  // ─── Keep-alive Supabase Ping ──────────────────────────────
+  useEffect(() => {
+    if (!isOnline) return;
+
+    // Ping immediately when going online
+    db.pingSupabase();
+
+    // Then ping every 15 minutes to keep it active
+    const PING_INTERVAL = 15 * 60 * 1000;
+    const intervalId = setInterval(() => {
+      if (isOnline) {
+        db.pingSupabase();
+      }
+    }, PING_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [isOnline]);
+
   // ─── Android Advanced Features (Capacitor) ─────────────────
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
