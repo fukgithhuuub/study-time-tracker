@@ -1,0 +1,6 @@
+{
+  "appId": "com.pavneet.studyflow",
+  "appName": "StudyFlow",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

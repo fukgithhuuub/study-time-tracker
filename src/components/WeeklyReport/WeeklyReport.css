@@ -1,0 +1,243 @@
+.weekly-report {
+    padding: 1.5rem;
+}
+
+.wr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.wr-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.wr-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.wr-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-sans);
+}
+
+.wr-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.wr-period {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+/* Overview */
+.wr-overview {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.wr-stat {
+    flex: 1;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    color: var(--accent-primary);
+}
+
+.wr-stat-value {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.wr-stat-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Subject bars */
+.wr-subjects {
+    margin-bottom: 1.25rem;
+}
+
+.wr-section-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.wr-subject-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.wr-subject-name {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 120px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.wr-subject-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.wr-subject-bar-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.wr-subject-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+    min-width: 4px;
+}
+
+.wr-subject-mins {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Daily bars */
+.wr-daily {
+    margin-bottom: 1rem;
+}
+
+.wr-daily-grid {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.wr-daily-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.wr-daily-bar-wrapper {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.wr-daily-bar {
+    width: 100%;
+    max-width: 28px;
+    background: var(--accent-gradient);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.6s ease;
+    min-height: 4px;
+}
+
+.wr-daily-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.wr-daily-mins {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+/* Best day */
+.wr-best-day {
+    padding: 0.75rem 1rem;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .weekly-report {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .wr-overview {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .wr-stat {
+        min-width: unset;
+    }
+
+    .wr-subject-name {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+
+    .wr-daily-bar-wrapper {
+        height: 60px;
+    }
+
+    .wr-action-btn span {
+        display: none;
+    }
+
+    .wr-action-btn {
+        padding: 0.4rem;
+    }
+}

@@ -1,0 +1,129 @@
+.break-stats {
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.bs-title {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+}
+
+.bs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.bs-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+}
+
+.bs-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bs-card-icon.pomodoro {
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+}
+
+.bs-card-icon.stopwatch {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.bs-card-icon.avg {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.bs-card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.bs-card-value {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.bs-card-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.bs-bar-section {
+    margin-bottom: 1.25rem;
+}
+
+.bs-bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.bs-bar-percent {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+.bs-bar-track {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.bs-bar-fill.pomodoro {
+    background: var(--accent-primary);
+    transition: width 0.5s ease;
+}
+
+.bs-bar-fill.stopwatch {
+    background: var(--accent-secondary);
+    transition: width 0.5s ease;
+}
+
+.bs-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.bs-highlight-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.bs-highlight-item strong {
+    color: var(--text-primary);
+}

@@ -1,0 +1,234 @@
+.focus-mode-trigger {
+    font-size: 0.85rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-full);
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: #a78bfa;
+    transition: all 0.3s;
+}
+
+.focus-mode-trigger:hover {
+    background: rgba(139, 92, 246, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+}
+
+/* Overlay */
+.focus-mode-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.focus-mode-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(15, 10, 30, 0.97) 0%, rgba(5, 2, 15, 0.99) 100%);
+    backdrop-filter: blur(30px);
+}
+
+.focus-mode-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+}
+
+/* Header */
+.focus-mode-header {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.focus-close-btn,
+.focus-fs-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.focus-close-btn:hover,
+.focus-fs-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Center */
+.focus-mode-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.focus-subject-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.focus-subject-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* Timer ring */
+.focus-timer-ring {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.focus-timer-ring svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.focus-time-display {
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 2px;
+    text-shadow: 0 0 60px rgba(99, 102, 241, 0.3);
+}
+
+.focus-quote {
+    max-width: 400px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    line-height: 1.6;
+    min-height: 2.5em;
+    transition: opacity 0.5s;
+}
+
+/* Controls */
+.focus-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.focus-ctrl-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: var(--radius-md) !important;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.focus-ctrl-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: white;
+}
+
+.focus-ctrl-btn.primary {
+    width: 80px;
+    height: 80px;
+    border-radius: 50% !important;
+    background: var(--accent-gradient) !important;
+    border: none !important;
+    color: white;
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+}
+
+.focus-ctrl-btn.primary:hover {
+    box-shadow: 0 0 60px rgba(99, 102, 241, 0.6);
+    transform: scale(1.05);
+}
+
+.focus-ctrl-btn.save {
+    padding: 0.6rem 1.25rem !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Breathing animation */
+.focus-breathing {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.breathing-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.5);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+    50% {
+        transform: scale(2);
+        opacity: 0.8;
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+}
+
+.focus-orbit-dot {
+    filter: drop-shadow(0 0 8px var(--accent-primary));
+}
+
+@media (max-width: 600px) {
+    .focus-time-display {
+        font-size: 3rem;
+    }
+
+    .focus-timer-ring {
+        width: 240px;
+        height: 240px;
+    }
+
+    .focus-timer-ring svg {
+        width: 240px;
+        height: 240px;
+    }
+
+    .focus-controls {
+        gap: 1rem;
+    }
+
+    .focus-ctrl-btn.primary {
+        width: 64px;
+        height: 64px;
+    }
+}

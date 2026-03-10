@@ -1,0 +1,136 @@
+.daily-target {
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 500px;
+}
+
+.daily-target-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.daily-target-title {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.goal-edit-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.goal-edit-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+}
+
+.daily-target-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.target-ring-wrapper {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.target-ring {
+    position: absolute;
+}
+
+.target-ring-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+}
+
+.target-percent {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.target-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.goal-met-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.goal-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.goal-editor-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.goal-input {
+    width: 80px;
+    padding: 0.4rem;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-family: var(--font-sans);
+    outline: none;
+}
+
+.goal-input:focus {
+    border-color: var(--accent-primary);
+}
+
+.goal-save-btn {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+    .daily-target {
+        padding: 1.25rem;
+    }
+
+    .target-ring-wrapper {
+        width: 130px;
+        height: 130px;
+    }
+
+    .target-percent {
+        font-size: 1.6rem;
+    }
+}

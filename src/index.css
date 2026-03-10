@@ -1,0 +1,284 @@
+:root {
+  /* Color Palette - Premium Dark */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121c;
+  --bg-tertiary: #1a1a29;
+
+  --glass-bg: rgba(20, 20, 30, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  --accent-primary: #6366f1;
+  /* Indigo */
+  --accent-secondary: #8b5cf6;
+  /* Violet */
+  --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  /* Spacing & Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
+
+/* Light Theme Override */
+[data-theme="light"] {
+  --bg-primary: #f5f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eef0f5;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.06);
+
+  --text-primary: #1e1e2e;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.glass-button.active {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.glass-input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  width: 100%;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Light Theme: Fix invisible white-rgba backgrounds ─── */
+/* Many components use rgba(255,255,255,0.03-0.08) which is invisible on light bg. */
+[data-theme="light"] .bs-card,
+[data-theme="light"] .bs-bar-track,
+[data-theme="light"] .cal-month-summary,
+[data-theme="light"] .cal-weekdays,
+[data-theme="light"] .cal-day-detail,
+[data-theme="light"] .cal-detail-session,
+[data-theme="light"] .cal-nav-btn,
+[data-theme="light"] .wr-stat,
+[data-theme="light"] .wr-subject-bar-track,
+[data-theme="light"] .wr-action-btn,
+[data-theme="light"] .recent-session-item,
+[data-theme="light"] .session-item,
+[data-theme="light"] .task-item,
+[data-theme="light"] .badge-card,
+[data-theme="light"] .badge-item,
+[data-theme="light"] .sr-card,
+[data-theme="light"] .ks-shortcut,
+[data-theme="light"] .ks-panel,
+[data-theme="light"] .timer-mode-btn,
+[data-theme="light"] .ambient-btn,
+[data-theme="light"] .subject-chip,
+[data-theme="light"] .subject-option,
+[data-theme="light"] .cal-detail-mode {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .cal-nav-btn:hover,
+[data-theme="light"] .wr-action-btn:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Timer mode selector pill background */
+[data-theme="light"] .timer-mode-selector {
+  background: var(--bg-tertiary) !important;
+}
+
+/* Glass button in light theme */
+[data-theme="light"] .glass-button {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .glass-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Keep the active (play) button gradient visible in light theme */
+[data-theme="light"] .glass-button.active {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45) !important;
+}
+
+/* Control buttons (reset/save/settings) — give them a visible background in light mode */
+[data-theme="light"] .control-btn.glass-button {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .control-btn.glass-button:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .session-item:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .session-edit-input {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ─── Global Mobile Enhancements ─── */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Remove tap highlight flash on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure all interactive elements have good touch targets */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  /* prevents 300ms delay on mobile */
+}
