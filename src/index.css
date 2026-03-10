@@ -60,6 +60,7 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior-y: none;
 }
 
 * {
@@ -77,6 +78,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 body::before {
@@ -281,6 +284,8 @@ h6 {
 /* ─── Global Mobile Enhancements ─── */
 html, body {
   overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Remove tap highlight flash on mobile */
