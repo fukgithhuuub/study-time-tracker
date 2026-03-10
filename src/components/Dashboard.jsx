@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Clock, CheckSquare, Target, Trophy, Calendar, Edit2, Check } from 'lucide-react';
-import { isToday, parseISO, format, isWithinInterval, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
+import { isToday, parseISO, format, startOfWeek, endOfWeek, differenceInCalendarDays } from 'date-fns';
 
 const QUOTES = [
   { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
@@ -21,7 +21,7 @@ export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }
   const totalMinutesToday = useMemo(() => todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60, [todaySessions]);
 
   const dailyGoalMinutes = dailyGoal;
-  const progress = Math.min((totalMinutesToday / dailyGoalMinutes) * 100, 100);
+  const progress = dailyGoalMinutes > 0 ? Math.min((totalMinutesToday / dailyGoalMinutes) * 100, 100) : 100;
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const totalTasks = tasks.length;
@@ -61,7 +61,7 @@ export function Dashboard({ sessions, subjects, tasks, dailyGoal, setDailyGoal }
 
     for (const dateStr of uniqueDates) {
       const date = parseISO(dateStr);
-      const diff = differenceInDays(checkDate, date);
+      const diff = differenceInCalendarDays(checkDate, date);
       if (diff === 0 || diff === 1) {
           currentStreak++;
           checkDate = date;

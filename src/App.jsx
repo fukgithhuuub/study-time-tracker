@@ -19,7 +19,7 @@ import { TaskList } from './components/TaskList';
 import { SyncSettings } from './components/SyncSettings';
 import { Soundscapes } from './components/Soundscapes';
 import { cn } from './lib/utils';
-import { parseISO, format, differenceInDays } from 'date-fns';
+import { parseISO, format, differenceInCalendarDays } from 'date-fns';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -123,7 +123,7 @@ function App() {
 
     for (const dateStr of uniqueDates) {
       const date = parseISO(dateStr);
-      const diff = differenceInDays(checkDate, date);
+      const diff = differenceInCalendarDays(checkDate, date);
       if (diff === 0 || diff === 1) {
           currentStreak++;
           checkDate = date;

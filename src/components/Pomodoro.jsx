@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Play, Pause, RotateCcw, Coffee, BookOpen, Settings, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -24,21 +24,6 @@ export function Pomodoro({
     work: { ...appModes.work, color: 'bg-red-500', icon: BookOpen },
     'short-break': { ...appModes['short-break'], color: 'bg-teal-500', icon: Coffee },
     'long-break': { ...appModes['long-break'], color: 'bg-blue-500', icon: Coffee },
-  };
-
-  const handleSessionComplete = () => {
-    if (mode === 'work' && selectedSubjectId) {
-      onSaveSession({
-        id: Date.now().toString(),
-        subjectId: selectedSubjectId,
-        duration: modes.work.time,
-        timestamp: new Date().toISOString(),
-        type: 'pomodoro'
-      });
-      alert("Great job! Session complete. Take a break!");
-    } else {
-      alert("Break complete! Ready to focus?");
-    }
   };
 
   const handleModeChange = (newMode) => {

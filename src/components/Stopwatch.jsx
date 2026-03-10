@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, Save, Timer, ChevronDown } from 'lucide-react';
-import { format } from 'date-fns';
+import React from 'react';
+import { Play, Pause, Square, Save, Timer } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Stopwatch({
@@ -49,8 +48,6 @@ export function Stopwatch({
     setIsRunning(false);
     setTime(0);
   };
-
-  const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   return (
     <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/40 backdrop-blur-[100px] rounded-[3rem] border border-zinc-800/50 shadow-2xl max-w-2xl mx-auto space-y-12 relative overflow-hidden group ring-1 ring-white/5 transition-all duration-700">
