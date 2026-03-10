@@ -88,7 +88,7 @@ const Profile = ({ sessions, onImportSessions, onClearAllData }) => {
                         onImportSessions(imported);
                         alert(`Successfully imported ${imported.length} sessions!`);
                     }
-                } catch (err) {
+                } catch {
                     alert('Failed to parse CSV file. Please check the format.');
                 }
             };

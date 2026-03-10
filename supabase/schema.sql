@@ -69,3 +69,19 @@ CREATE POLICY "Allow all for sf_sessions" ON sf_sessions FOR ALL USING (true);
 CREATE POLICY "Allow all for sf_subjects" ON sf_subjects FOR ALL USING (true);
 CREATE POLICY "Allow all for sf_tasks" ON sf_tasks FOR ALL USING (true);
 CREATE POLICY "Allow all for sf_settings" ON sf_settings FOR ALL USING (true);
+
+-- Timer State for real-time sync across devices
+CREATE TABLE IF NOT EXISTS sf_timer_state (
+    user_id UUID REFERENCES sf_users(id) ON DELETE CASCADE PRIMARY KEY,
+    is_active BOOLEAN DEFAULT false,
+    mode TEXT NOT NULL DEFAULT 'stopwatch',
+    pomodoro_state TEXT NOT NULL DEFAULT 'work',
+    start_time TIMESTAMPTZ,
+    accumulated_time INTEGER DEFAULT 0,
+    pomodoro_count INTEGER DEFAULT 0,
+    target_duration INTEGER DEFAULT 1500,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE sf_timer_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for sf_timer_state" ON sf_timer_state FOR ALL USING (true);

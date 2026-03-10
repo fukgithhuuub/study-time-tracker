@@ -1,222 +1,383 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Settings, Coffee, Briefcase, Save, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
-import * as db from '../../lib/dataService';
+import { fetchTimerState, upsertTimerState, subscribeToTimer } from '../../lib/dataService';
 import './Timer.css';
 
 const Timer = ({ onSessionComplete }) => {
     const { user, isOnline } = useUser();
-    const [mode, setMode] = useState('stopwatch');
-    const [pomodoroState, setPomodoroState] = useState('work');
 
+    // Default Timer settings
     const [settings, setSettings] = useState(() => {
         const saved = localStorage.getItem('study-tracker-timer-settings');
         if (saved) {
             try {
                 return JSON.parse(saved);
-            } catch (e) {
+            } catch {
                 console.error('Failed to parse timer settings');
             }
         }
         return { work: 25, shortBreak: 5, longBreak: 15 };
     });
 
-    const getDurationForState = (state, currentSettings) => {
-        const w = parseInt(currentSettings.work) || 1;
-        const s = parseInt(currentSettings.shortBreak) || 1;
-        const l = parseInt(currentSettings.longBreak) || 1;
-
-        if (state === 'work') return w * 60;
-        if (state === 'shortBreak') return s * 60;
-        if (state === 'longBreak') return l * 60;
-        return 25 * 60;
-    };
-
-    const [time, setTime] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(() => getDurationForState('work', settings));
+    // We store the mode locally, and use states
+    const [mode, setMode] = useState('stopwatch'); // stopwatch | pomodoro
     const [isActive, setIsActive] = useState(false);
+    const [pomodoroState, setPomodoroState] = useState('work'); // work | shortBreak | longBreak
     const [pomodoroCount, setPomodoroCount] = useState(0);
+
+    // Timing logic using absolute time
+    const [startTime, setStartTime] = useState(null); // the Date.now() when timer started
+    const [accumulatedTime, setAccumulatedTime] = useState(0); // previously accumulated seconds (mostly for stopwatch)
+
+    // UI presentation states
+    const [displayTime, setDisplayTime] = useState(0); // raw seconds for stopwatch
+    const [timeLeft, setTimeLeft] = useState(settings.work * 60); // seconds left for Pomodoro
+
     const [showSettings, setShowSettings] = useState(false);
 
-    // Use refs to avoid stale closures in the interval callback
-    const pomodoroStateRef = useRef(pomodoroState);
-    const pomodoroCountRef = useRef(pomodoroCount);
+    // Refs for safe access in intervals and callbacks without triggering effect loops
     const settingsRef = useRef(settings);
+    const modeRef = useRef(mode);
+    const pomodoroStateRef = useRef(pomodoroState);
     const onSessionCompleteRef = useRef(onSessionComplete);
+    const pomodoroCountRef = useRef(pomodoroCount);
+    const isActiveRef = useRef(isActive);
+    const startTimeRef = useRef(startTime);
+    const accumulatedTimeRef = useRef(accumulatedTime);
 
-    useEffect(() => { pomodoroStateRef.current = pomodoroState; }, [pomodoroState]);
-    useEffect(() => { pomodoroCountRef.current = pomodoroCount; }, [pomodoroCount]);
     useEffect(() => { settingsRef.current = settings; }, [settings]);
+    useEffect(() => { modeRef.current = mode; }, [mode]);
+    useEffect(() => { pomodoroStateRef.current = pomodoroState; }, [pomodoroState]);
     useEffect(() => { onSessionCompleteRef.current = onSessionComplete; }, [onSessionComplete]);
+    useEffect(() => { pomodoroCountRef.current = pomodoroCount; }, [pomodoroCount]);
+    useEffect(() => { isActiveRef.current = isActive; }, [isActive]);
+    useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
+    useEffect(() => { accumulatedTimeRef.current = accumulatedTime; }, [accumulatedTime]);
 
-    // Keyboard shortcut handler
-    useEffect(() => {
-        const handleShortcut = (e) => {
-            const action = e.detail;
-            switch (action) {
-                case 'toggle-timer':
-                    setIsActive(prev => !prev);
-                    break;
-                case 'reset-timer':
-                    setIsActive(false);
-                    if (mode === 'stopwatch') {
-                        setTime(0);
-                    } else {
-                        setTimeLeft(getDurationForState(pomodoroStateRef.current, settingsRef.current));
-                    }
-                    break;
-                case 'save-session':
-                    if (mode === 'stopwatch' && time > 0 && onSessionCompleteRef.current) {
-                        onSessionCompleteRef.current(time, 'Stopwatch').then(() => {
-                            setTime(0);
-                            setIsActive(false);
-                        }).catch(err => console.error('Failed to save:', err));
-                    }
-                    break;
-                case 'switch-mode':
-                    setIsActive(false);
-                    if (mode === 'stopwatch') {
-                        setMode('pomodoro');
-                        setPomodoroState('work');
-                        setTimeLeft(getDurationForState('work', settingsRef.current));
-                    } else {
-                        setMode('stopwatch');
-                        setTime(0);
-                    }
-                    break;
-            }
-        };
-        window.addEventListener('studyflow-shortcut', handleShortcut);
-        return () => window.removeEventListener('studyflow-shortcut', handleShortcut);
-    }, [mode, time]);
+    // Apply incoming state from cloud
+    const syncStateFromCloud = (data) => {
+        setMode(data.mode);
+        setIsActive(data.isActive);
+        setPomodoroState(data.pomodoroState);
+        setStartTime(data.startTime);
+        setAccumulatedTime(data.accumulatedTime);
+        setPomodoroCount(data.pomodoroCount);
 
-    // Load settings from Supabase on mount
+        if (data.targetDuration !== undefined && data.targetDuration !== null && !isActiveRef.current) {
+             setTimeLeft(Math.max(0, data.targetDuration - data.accumulatedTime));
+        }
+    };
+
+    // Initial load from cloud (if online) and Subscription
     useEffect(() => {
-        const loadSettings = async () => {
-            if (isOnline) {
-                try {
-                    const remote = await db.fetchSettings(user.dbUserId);
-                    if (remote?.timerSettings) {
-                        setSettings(remote.timerSettings);
-                    }
-                } catch (err) {
-                    console.error('Failed to load timer settings from Supabase:', err);
+        if (!isOnline || !user?.dbUserId) return;
+
+        let unsubscribe = () => {};
+
+        const loadCloudData = async () => {
+            try {
+                // Fetch settings
+                const { fetchSettings } = await import('../../lib/dataService');
+                const settingsData = await fetchSettings(user.dbUserId);
+                if (settingsData && settingsData.timerSettings) {
+                    setSettings(settingsData.timerSettings);
                 }
+
+                // Fetch timer state
+                const data = await fetchTimerState(user.dbUserId);
+                if (data) {
+                    syncStateFromCloud({
+                        isActive: data.is_active,
+                        mode: data.mode,
+                        pomodoroState: data.pomodoro_state,
+                        startTime: data.start_time ? new Date(data.start_time).getTime() : null,
+                        accumulatedTime: data.accumulated_time,
+                        pomodoroCount: data.pomodoro_count,
+                        targetDuration: data.target_duration
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load cloud timer/settings:", err);
             }
+
+            // Subscribe to remote changes
+            unsubscribe = subscribeToTimer(user.dbUserId, (newData) => {
+                syncStateFromCloud(newData);
+            });
         };
-        if (user) loadSettings();
-    }, [user, isOnline]);
+
+        loadCloudData();
+
+        return () => {
+            unsubscribe();
+        };
+
+    }, [isOnline, user]);
+
+    const getDurationForState = (state, sets) => {
+        if (state === 'shortBreak') return (parseInt(sets.shortBreak) || 5) * 60;
+        if (state === 'longBreak') return (parseInt(sets.longBreak) || 15) * 60;
+        return (parseInt(sets.work) || 25) * 60; // Default to work
+    };
+
+    // Helper: Pushes current state to cloud
+    const pushStateToCloud = async (overrideData = {}) => {
+        if (!isOnline || !user?.dbUserId) return;
+
+        try {
+            await upsertTimerState(user.dbUserId, {
+                isActive: overrideData.isActive !== undefined ? overrideData.isActive : isActiveRef.current,
+                mode: overrideData.mode || modeRef.current,
+                pomodoroState: overrideData.pomodoroState || pomodoroStateRef.current,
+                startTime: overrideData.startTime !== undefined ? overrideData.startTime : startTimeRef.current,
+                accumulatedTime: overrideData.accumulatedTime !== undefined ? overrideData.accumulatedTime : accumulatedTimeRef.current,
+                pomodoroCount: overrideData.pomodoroCount !== undefined ? overrideData.pomodoroCount : pomodoroCountRef.current,
+                targetDuration: overrideData.targetDuration !== undefined ? overrideData.targetDuration : getDurationForState(pomodoroStateRef.current, settingsRef.current)
+            });
+        } catch (err) {
+            console.error("Failed to push timer state to cloud:", err);
+        }
+    };
+
+    const handleSettingsChange = (newSettings) => {
+        setSettings(newSettings);
+        if (!isActiveRef.current && modeRef.current === 'pomodoro') {
+            const newDur = getDurationForState(pomodoroStateRef.current, newSettings);
+            setTimeLeft(newDur);
+            pushStateToCloud({
+                isActive: false,
+                targetDuration: newDur
+            });
+        }
+    };
 
     useEffect(() => {
         localStorage.setItem('study-tracker-timer-settings', JSON.stringify(settings));
-        if (!isActive && mode === 'pomodoro') {
-            setTimeLeft(getDurationForState(pomodoroState, settings));
-        }
     }, [settings]);
 
+    // Global Keyboard Shortcuts
+    useEffect(() => {
+        const handleShortcut = (e) => {
+            if (e.detail === 'toggle-timer') {
+                toggleTimer();
+            } else if (e.detail === 'reset-timer') {
+                resetTimer();
+            } else if (e.detail === 'save-session') {
+                handleSaveStopwatch();
+            } else if (e.detail === 'switch-mode') {
+                handleModeSwitch(modeRef.current === 'stopwatch' ? 'pomodoro' : 'stopwatch');
+            } else if (e.detail === 'close') {
+                setShowSettings(false);
+            }
+        };
+
+        window.addEventListener('studyflow-shortcut', handleShortcut);
+        return () => window.removeEventListener('studyflow-shortcut', handleShortcut);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, isActive, startTime, accumulatedTime]);
+
+    // Tick Logic for updating UI
+    useEffect(() => {
+        let interval = null;
+
+        const updateDisplay = () => {
+            if (!isActiveRef.current) {
+                // Keep UI static if paused
+                if (modeRef.current === 'stopwatch') {
+                    setDisplayTime(accumulatedTimeRef.current);
+                } else if (modeRef.current === 'pomodoro') {
+                    // Time left is full duration minus accumulated time (if we paused halfway)
+                    const fullDuration = getDurationForState(pomodoroStateRef.current, settingsRef.current);
+                    setTimeLeft(Math.max(0, fullDuration - accumulatedTimeRef.current));
+                }
+                return;
+            }
+
+            // If active, calculate elapsed time since start
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
+            const totalElapsed = accumulatedTimeRef.current + elapsedSeconds;
+
+            if (modeRef.current === 'stopwatch') {
+                setDisplayTime(totalElapsed);
+            } else if (modeRef.current === 'pomodoro') {
+                // Determine target duration (either loaded from cloud, or locally fallback)
+                // Use timeLeft state from earlier if we can? Actually, use the absolute target.
+                const fullDuration = getDurationForState(pomodoroStateRef.current, settingsRef.current);
+                const remaining = fullDuration - totalElapsed;
+
+                if (remaining <= 0) {
+                    // Timer finished
+                    handlePomodoroFinish(fullDuration);
+                } else {
+                    setTimeLeft(remaining);
+                }
+            }
+        };
+
+        const handlePomodoroFinish = (finishedDuration) => {
+            // Stop the current tick
+            const currentPomState = pomodoroStateRef.current;
+            const currentSettings = settingsRef.current;
+            const currentStartTime = startTimeRef.current;
+
+            let newPomState = 'work';
+            let newCount = pomodoroCountRef.current;
+
+            if (currentPomState === 'work') {
+                if (onSessionCompleteRef.current) {
+                    // We generate a deterministic ID using the start time so duplicate calls on different devices overwrite instead of duplicate
+                    const deterministicId = currentStartTime ? currentStartTime : Date.now();
+                    onSessionCompleteRef.current(finishedDuration, 'Pomodoro', deterministicId);
+                }
+                newCount += 1;
+                setPomodoroCount(newCount);
+
+                if (newCount % 4 === 0) {
+                    newPomState = 'longBreak';
+                } else {
+                    newPomState = 'shortBreak';
+                }
+            } else {
+                newPomState = 'work';
+            }
+
+            // Immediately pause and prepare next state
+            setIsActive(false);
+            setPomodoroState(newPomState);
+            setAccumulatedTime(0);
+            setStartTime(null);
+
+            // Time left is the new state's duration
+            setTimeLeft(getDurationForState(newPomState, currentSettings));
+
+            // Sync
+            pushStateToCloud({
+                isActive: false,
+                pomodoroState: newPomState,
+                accumulatedTime: 0,
+                startTime: null,
+                pomodoroCount: newCount
+            });
+        };
+
+        // Run UI update tick every 100ms for smooth transitions and immediate response
+        interval = setInterval(updateDisplay, 100);
+        updateDisplay(); // initial run
+
+        return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isActive, mode, startTime, accumulatedTime]); // re-bind interval on critical changes
+
+
     const toggleTimer = () => {
-        setIsActive(prev => !prev);
+        if (isActive) {
+            // Pausing
+            const now = Date.now();
+            const elapsedSinceStart = startTimeRef.current ? Math.floor((now - startTimeRef.current) / 1000) : 0;
+            const newAccumulated = accumulatedTimeRef.current + elapsedSinceStart;
+
+            setIsActive(false);
+            setAccumulatedTime(newAccumulated);
+            setStartTime(null);
+
+            pushStateToCloud({
+                isActive: false,
+                accumulatedTime: newAccumulated,
+                startTime: null
+            });
+        } else {
+            // Playing
+            const now = Date.now();
+            setIsActive(true);
+            setStartTime(now);
+
+            pushStateToCloud({
+                isActive: true,
+                startTime: now,
+                accumulatedTime: accumulatedTimeRef.current // Send current accumulated to ensure sync
+            });
+        }
     };
 
     const resetTimer = () => {
         setIsActive(false);
+        setStartTime(null);
+        setAccumulatedTime(0);
+
         if (mode === 'stopwatch') {
-            setTime(0);
+            setDisplayTime(0);
         } else {
             setTimeLeft(getDurationForState(pomodoroState, settings));
         }
-    };
 
-    const handleSaveStopwatch = async () => {
-        if (time > 0 && onSessionComplete) {
-            try {
-                await onSessionComplete(time, 'Stopwatch');
-                setTime(0);
-                setIsActive(false);
-            } catch (err) {
-                console.error('Failed to save session:', err);
-            }
-        }
-    };
-
-    const handleSettingsClick = () => {
-        setShowSettings(true);
-    };
-
-    const handleCloseSettings = async () => {
-        setShowSettings(false);
-        // Sync settings to Supabase
-        if (isOnline) {
-            try {
-                await db.upsertSettings(user.dbUserId, { timerSettings: settings });
-            } catch (err) {
-                console.error('Failed to save timer settings to Supabase:', err);
-            }
-        }
+        pushStateToCloud({
+            isActive: false,
+            startTime: null,
+            accumulatedTime: 0
+        });
     };
 
     const handleModeSwitch = (newMode) => {
+        if (mode === newMode) return;
         setIsActive(false);
         setMode(newMode);
+        setStartTime(null);
+        setAccumulatedTime(0);
+
         if (newMode === 'stopwatch') {
-            setTime(0);
+            setDisplayTime(0);
         } else {
             setPomodoroState('work');
             setTimeLeft(getDurationForState('work', settings));
         }
+
+        pushStateToCloud({
+            isActive: false,
+            mode: newMode,
+            startTime: null,
+            accumulatedTime: 0,
+            pomodoroState: 'work'
+        });
     };
 
-    const handlePomodoroStateSwitch = useCallback((newState) => {
+    const handlePomodoroStateSwitch = (newState) => {
+        if (pomodoroState === newState) return;
         setIsActive(false);
         setPomodoroState(newState);
-        setTimeLeft(getDurationForState(newState, settingsRef.current));
-    }, []);
+        setStartTime(null);
+        setAccumulatedTime(0);
+        setTimeLeft(getDurationForState(newState, settings));
 
-    // Main tick logic — uses refs to always get fresh values
-    useEffect(() => {
-        let interval = null;
+        pushStateToCloud({
+            isActive: false,
+            pomodoroState: newState,
+            startTime: null,
+            accumulatedTime: 0
+        });
+    };
 
-        if (isActive) {
-            if (mode === 'stopwatch') {
-                interval = setInterval(() => {
-                    setTime(t => t + 1);
-                }, 1000);
-            } else if (mode === 'pomodoro') {
-                interval = setInterval(() => {
-                    setTimeLeft((prevTime) => {
-                        if (prevTime <= 1) {
-                            // Use refs for fresh state inside interval
-                            setIsActive(false);
-                            const currentPomState = pomodoroStateRef.current;
-                            const currentSettings = settingsRef.current;
+    const handleSaveStopwatch = () => {
+        if (mode !== 'stopwatch' || displayTime === 0) return;
 
-                            if (currentPomState === 'work') {
-                                if (onSessionCompleteRef.current) {
-                                    onSessionCompleteRef.current(getDurationForState('work', currentSettings), 'Pomodoro');
-                                }
-                                const newCount = pomodoroCountRef.current + 1;
-                                setPomodoroCount(newCount);
-
-                                if (newCount % 4 === 0) {
-                                    setPomodoroState('longBreak');
-                                    return getDurationForState('longBreak', currentSettings);
-                                } else {
-                                    setPomodoroState('shortBreak');
-                                    return getDurationForState('shortBreak', currentSettings);
-                                }
-                            } else {
-                                setPomodoroState('work');
-                                return getDurationForState('work', currentSettings);
-                            }
-                        }
-                        return prevTime - 1;
-                    });
-                }, 1000);
-            }
+        // Save current active accumulated time if playing
+        let totalTimeToSave = accumulatedTimeRef.current;
+        const currentStartTime = startTimeRef.current;
+        if (isActiveRef.current && currentStartTime) {
+            const now = Date.now();
+            totalTimeToSave += Math.floor((now - currentStartTime) / 1000);
         }
 
-        return () => clearInterval(interval);
-    }, [isActive, mode]);
+        if (totalTimeToSave === 0) return;
+
+        if (onSessionComplete) {
+            // Use the start time to deterministically generate the session ID
+            const deterministicId = currentStartTime ? currentStartTime : Date.now();
+            onSessionComplete(totalTimeToSave, 'Stopwatch', deterministicId);
+        }
+        resetTimer();
+    };
 
     const formatTime = (seconds) => {
         const h = Math.floor(seconds / 3600);
@@ -234,6 +395,23 @@ const Timer = ({ onSessionComplete }) => {
         const total = getDurationForState(pomodoroState, settings);
         if (total <= 0) return 0;
         return Math.max(0, Math.min(100, (timeLeft / total) * 100));
+    };
+
+    const handleSettingsClick = () => {
+        setShowSettings(true);
+    };
+
+    const handleCloseSettings = async () => {
+        setShowSettings(false);
+        // Sync settings to Supabase
+        if (isOnline && user?.dbUserId) {
+            const { upsertSettings } = await import('../../lib/dataService');
+            try {
+                await upsertSettings(user.dbUserId, { timerSettings: settings });
+            } catch (err) {
+                console.error('Failed to save timer settings to Supabase:', err);
+            }
+        }
     };
 
     const circumference = 2 * Math.PI * 120;
@@ -307,13 +485,13 @@ const Timer = ({ onSessionComplete }) => {
                             style={{
                                 strokeDasharray: circumference,
                                 strokeDashoffset: strokeDashoffset,
-                                transition: 'stroke-dashoffset 1s linear'
+                                transition: 'stroke-dashoffset 0.1s linear' // Updated to match tick rate
                             }}
                         />
                     </svg>
                 )}
                 <div className="time-text">
-                    {formatTime(mode === 'stopwatch' ? time : timeLeft)}
+                    {formatTime(mode === 'stopwatch' ? displayTime : timeLeft)}
                 </div>
             </div>
 
@@ -326,7 +504,7 @@ const Timer = ({ onSessionComplete }) => {
                     {isActive ? <Pause size={48} /> : <Play size={48} style={{ marginLeft: '4px' }} />}
                 </button>
                 {mode === 'stopwatch' ? (
-                    <button className="control-btn glass-button" onClick={handleSaveStopwatch} title="Log Session" style={{ color: time > 0 ? 'var(--success)' : 'inherit' }}>
+                    <button className="control-btn glass-button" onClick={handleSaveStopwatch} title="Log Session" style={{ color: displayTime > 0 ? 'var(--success)' : 'inherit' }}>
                         <Save size={32} />
                     </button>
                 ) : (
@@ -359,7 +537,7 @@ const Timer = ({ onSessionComplete }) => {
                                 type="number"
                                 min="1" max="120"
                                 value={settings.work}
-                                onChange={(e) => setSettings({ ...settings, work: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                onChange={(e) => handleSettingsChange({ ...settings, work: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             />
                         </div>
                         <div className="setting-row">
@@ -368,7 +546,7 @@ const Timer = ({ onSessionComplete }) => {
                                 type="number"
                                 min="1" max="60"
                                 value={settings.shortBreak}
-                                onChange={(e) => setSettings({ ...settings, shortBreak: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                onChange={(e) => handleSettingsChange({ ...settings, shortBreak: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             />
                         </div>
                         <div className="setting-row">
@@ -377,7 +555,7 @@ const Timer = ({ onSessionComplete }) => {
                                 type="number"
                                 min="1" max="60"
                                 value={settings.longBreak}
-                                onChange={(e) => setSettings({ ...settings, longBreak: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                onChange={(e) => handleSettingsChange({ ...settings, longBreak: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             />
                         </div>
                     </div>

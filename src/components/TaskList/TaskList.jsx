@@ -25,7 +25,7 @@ const TaskList = () => {
             // Fallback: localStorage
             const saved = localStorage.getItem('study-tracker-tasks');
             if (saved) {
-                try { setTasks(JSON.parse(saved)); } catch (e) { }
+                try { setTasks(JSON.parse(saved)); } catch { /* ignore */ }
             }
         };
         if (user) loadTasks();

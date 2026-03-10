@@ -182,7 +182,7 @@ export async function upsertSettings(userId, settings) {
     try {
         const result = await fetchSettings(userId);
         existing = result;
-    } catch (e) { /* ignore, use defaults */ }
+    } catch { /* ignore, use defaults */ }
 
     const merged = {
         user_id: userId,
@@ -195,6 +195,16 @@ export async function upsertSettings(userId, settings) {
     if (error) throw new Error(`upsertSettings: ${error.message}`);
 }
 
+// ─── Keep-alive Ping ─────────────────────────────────────────
+
+export async function pingSupabase() {
+    try {
+        await supabase.from('sf_users').select('id').limit(1);
+    } catch (err) {
+        console.error('Failed to ping Supabase:', err);
+    }
+}
+
 // ─── Bulk Clear ──────────────────────────────────────────────
 
 export async function clearAllUserData(userId) {
@@ -202,4 +212,73 @@ export async function clearAllUserData(userId) {
     await supabase.from('sf_subjects').delete().eq('user_id', userId);
     await supabase.from('sf_tasks').delete().eq('user_id', userId);
     await supabase.from('sf_settings').delete().eq('user_id', userId);
+}
+
+// ─── Timer State (Realtime Sync) ─────────────────────────────
+
+export async function fetchTimerState(userId) {
+    const { data, error } = await supabase
+        .from('sf_timer_state')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) throw new Error(`fetchTimerState: ${error.message}`);
+    return data;
+}
+
+export async function upsertTimerState(userId, timerData) {
+    const payload = {
+        user_id: userId,
+        is_active: timerData.isActive,
+        mode: timerData.mode,
+        pomodoro_state: timerData.pomodoroState,
+        start_time: timerData.startTime ? new Date(timerData.startTime).toISOString() : null,
+        accumulated_time: timerData.accumulatedTime || 0,
+        pomodoro_count: timerData.pomodoroCount || 0,
+        target_duration: timerData.targetDuration,
+        updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+        .from('sf_timer_state')
+        .upsert(payload, { onConflict: 'user_id' });
+
+    if (error) {
+        console.error('upsertTimerState error:', error);
+    }
+}
+
+export function subscribeToTimer(userId, callback) {
+    if (!userId || !supabase) return () => {};
+
+    const channel = supabase.channel(`timer_sync_${userId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'sf_timer_state',
+                filter: `user_id=eq.${userId}`
+            },
+            (payload) => {
+                const newData = payload.new;
+                if (newData) {
+                    callback({
+                        isActive: newData.is_active,
+                        mode: newData.mode,
+                        pomodoroState: newData.pomodoro_state,
+                        startTime: newData.start_time ? new Date(newData.start_time).getTime() : null,
+                        accumulatedTime: newData.accumulated_time,
+                        pomodoroCount: newData.pomodoro_count,
+                        targetDuration: newData.target_duration
+                    });
+                }
+            }
+        )
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(channel);
+    };
 }

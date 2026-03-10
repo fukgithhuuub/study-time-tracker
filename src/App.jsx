@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
 import Onboarding from './components/Onboarding/Onboarding';
@@ -35,8 +35,24 @@ function App() {
   const [loadingSessions, setLoadingSessions] = useState(false);
 
   // Refs for keyboard shortcuts to access current state
-  const timerRef = useRef(null);
-  const focusModeRef = useRef(null);
+
+  // ─── Keep-alive Supabase Ping ──────────────────────────────
+  useEffect(() => {
+    if (!isOnline) return;
+
+    // Ping immediately when going online
+    db.pingSupabase();
+
+    // Then ping every 15 minutes to keep it active
+    const PING_INTERVAL = 15 * 60 * 1000;
+    const intervalId = setInterval(() => {
+      if (isOnline) {
+        db.pingSupabase();
+      }
+    }, PING_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [isOnline]);
 
   // ─── Android Advanced Features (Capacitor) ─────────────────
   useEffect(() => {
@@ -84,7 +100,7 @@ function App() {
         } else {
           const saved = localStorage.getItem('study-tracker-sessions');
           if (saved) {
-            try { setSessions(JSON.parse(saved)); } catch (e) { }
+            try { setSessions(JSON.parse(saved)); } catch { /* ignore */ }
           }
         }
       } catch (err) {
@@ -92,7 +108,7 @@ function App() {
         // Fallback to localStorage
         const saved = localStorage.getItem('study-tracker-sessions');
         if (saved) {
-          try { setSessions(JSON.parse(saved)); } catch (e) { }
+          try { setSessions(JSON.parse(saved)); } catch { /* ignore */ }
         }
       }
       setLoadingSessions(false);
@@ -148,13 +164,18 @@ function App() {
   if (!user) return <Onboarding />;
 
   // ─── Session CRUD ─────────────────────────────────────────
-  const handleSessionComplete = async (duration, mode) => {
+  const handleSessionComplete = async (duration, mode, forcedId = null) => {
     let subjectToLog = currentSubject;
     if (!subjectToLog) {
       subjectToLog = { id: 'uncategorized', name: 'Uncategorized', color: '#9ca3af' };
     }
+    const newSessionId = forcedId || Date.now();
+
+    // Check if a session with this ID already exists locally to prevent double-logging from sync
+    if (sessions.some(s => s.id === newSessionId)) return;
+
     const newSession = {
-      id: Date.now(),
+      id: newSessionId,
       subject: subjectToLog,
       duration,
       mode,
