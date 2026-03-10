@@ -19,7 +19,7 @@ const Onboarding = () => {
                 const parsed = JSON.parse(saved);
                 if (parsed && parsed.username) return parsed;
             }
-        } catch (e) { }
+        } catch { /* ignore */ }
         return null;
     }, []);
 
@@ -30,7 +30,7 @@ const Onboarding = () => {
                 const parsed = JSON.parse(sessions);
                 return Array.isArray(parsed) && parsed.length > 0;
             }
-        } catch (e) { }
+        } catch { /* ignore */ }
         return false;
     }, []);
 

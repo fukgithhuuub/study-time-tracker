@@ -8,7 +8,7 @@ const SpacedRepetition = () => {
     const [cards, setCards] = useState(() => {
         const saved = localStorage.getItem('study-tracker-sr-cards');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) { }
+            try { return JSON.parse(saved); } catch { /* ignore */ }
         }
         return [];
     });

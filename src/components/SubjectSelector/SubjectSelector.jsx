@@ -45,7 +45,7 @@ const SubjectSelector = ({ currentSubject, onSelectSubject }) => {
                     }
                     // If no subjects in DB yet, seed with defaults
                     for (const s of defaultSubjects) {
-                        try { await db.insertSubject(user.dbUserId, s); } catch (e) { /* ignore duplicates */ }
+                        try { await db.insertSubject(user.dbUserId, s); } catch { /* ignore duplicates */ }
                     }
                     setSubjects(defaultSubjects);
                     return;
@@ -59,7 +59,7 @@ const SubjectSelector = ({ currentSubject, onSelectSubject }) => {
                 try {
                     const parsed = JSON.parse(saved);
                     if (parsed.length > 0) { setSubjects(parsed); return; }
-                } catch (e) { }
+                } catch { /* ignore */ }
             }
             setSubjects(defaultSubjects);
         };
