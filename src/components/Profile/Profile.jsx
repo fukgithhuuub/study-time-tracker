@@ -104,7 +104,10 @@ const Profile = ({ sessions, onImportSessions, onClearAllData }) => {
             return;
         }
         const escapeCSV = (val) => {
-            const s = String(val);
+            let s = String(val);
+            if (['=', '+', '-', '@', '\t'].some(char => s.startsWith(char))) {
+                s = "'" + s;
+            }
             return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
         };
         const headers = ['Date', 'Subject', 'Duration (min)', 'Mode'];
