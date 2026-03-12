@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { logger } from './logger';
 
 // ============================================================
 // Supabase Data Service
@@ -201,7 +202,7 @@ export async function pingSupabase() {
     try {
         await supabase.from('sf_users').select('id').limit(1);
     } catch (err) {
-        console.error('Failed to ping Supabase:', err);
+        logger.error('Failed to ping Supabase:', err);
     }
 }
 
@@ -245,7 +246,7 @@ export async function upsertTimerState(userId, timerData) {
         .upsert(payload, { onConflict: 'user_id' });
 
     if (error) {
-        console.error('upsertTimerState error:', error);
+        logger.error('upsertTimerState error:', error);
     }
 }
 

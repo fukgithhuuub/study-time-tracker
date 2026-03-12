@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckSquare, Square, Plus, X, Trash2 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import * as db from '../../lib/dataService';
+import { logger } from '../../lib/logger';
 import './TaskList.css';
 
 const TaskList = () => {
@@ -19,7 +20,7 @@ const TaskList = () => {
                     setTasks(remoteTasks);
                     return;
                 } catch (err) {
-                    console.error('Failed to fetch tasks from Supabase:', err);
+                    logger.error('Failed to fetch tasks from Supabase:', err);
                 }
             }
             // Fallback: localStorage
@@ -48,7 +49,7 @@ const TaskList = () => {
 
             if (isOnline) {
                 try { await db.insertTask(user.dbUserId, task); }
-                catch (err) { console.error('Failed to add task to Supabase:', err); }
+                catch (err) { logger.error('Failed to add task to Supabase:', err); }
             }
         }
     };
@@ -61,7 +62,7 @@ const TaskList = () => {
 
         if (isOnline) {
             try { await db.updateTask(user.dbUserId, id, { done: newDone }); }
-            catch (err) { console.error('Failed to toggle task in Supabase:', err); }
+            catch (err) { logger.error('Failed to toggle task in Supabase:', err); }
         }
     };
 
@@ -70,7 +71,7 @@ const TaskList = () => {
 
         if (isOnline) {
             try { await db.deleteTask(user.dbUserId, id); }
-            catch (err) { console.error('Failed to delete task from Supabase:', err); }
+            catch (err) { logger.error('Failed to delete task from Supabase:', err); }
         }
     };
 

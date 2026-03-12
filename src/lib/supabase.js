@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger';
 
 // You must create a .env.local file in the root with:
 // VITE_SUPABASE_URL=your-project-url
@@ -23,5 +24,5 @@ export const supabase = supabaseUrl && supabaseAnonKey
     };
 
 if (!supabaseUrl) {
-    console.warn('Supabase URL or Key is missing. Using mock client. Please configure .env.local');
+    logger.warn('Supabase URL or Key is missing. Using mock client. Please configure .env.local');
 }

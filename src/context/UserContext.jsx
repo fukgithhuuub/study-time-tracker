@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { findOrCreateUser, verifyUser } from '../lib/dataService';
+import { logger } from '../lib/logger';
 
 const UserContext = createContext(null);
 
@@ -51,7 +52,7 @@ export const UserProvider = ({ children }) => {
             setLoading(false);
             return newUser;
         } catch (err) {
-            console.error('Setup user error:', err);
+            logger.error('Setup user error:', err);
             setError(err.message);
             setLoading(false);
             throw err;
@@ -81,7 +82,7 @@ export const UserProvider = ({ children }) => {
             setLoading(false);
             return loggedInUser;
         } catch (err) {
-            console.error('Login error:', err);
+            logger.error('Login error:', err);
             setError(err.message);
             setLoading(false);
             throw err;

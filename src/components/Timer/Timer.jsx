@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Settings, Coffee, Briefcase, Save, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import { fetchTimerState, upsertTimerState, subscribeToTimer } from '../../lib/dataService';
+import { logger } from '../../lib/logger';
 import './Timer.css';
 
 const Timer = ({ onSessionComplete }) => {
@@ -14,7 +15,7 @@ const Timer = ({ onSessionComplete }) => {
             try {
                 return JSON.parse(saved);
             } catch {
-                console.error('Failed to parse timer settings');
+                logger.error('Failed to parse timer settings');
             }
         }
         return { work: 25, shortBreak: 5, longBreak: 15 };
@@ -98,7 +99,7 @@ const Timer = ({ onSessionComplete }) => {
                     });
                 }
             } catch (err) {
-                console.error("Failed to load cloud timer/settings:", err);
+                logger.error("Failed to load cloud timer/settings:", err);
             }
 
             // Subscribe to remote changes
@@ -136,7 +137,7 @@ const Timer = ({ onSessionComplete }) => {
                 targetDuration: overrideData.targetDuration !== undefined ? overrideData.targetDuration : getDurationForState(pomodoroStateRef.current, settingsRef.current)
             });
         } catch (err) {
-            console.error("Failed to push timer state to cloud:", err);
+            logger.error("Failed to push timer state to cloud:", err);
         }
     };
 
@@ -409,7 +410,7 @@ const Timer = ({ onSessionComplete }) => {
             try {
                 await upsertSettings(user.dbUserId, { timerSettings: settings });
             } catch (err) {
-                console.error('Failed to save timer settings to Supabase:', err);
+                logger.error('Failed to save timer settings to Supabase:', err);
             }
         }
     };

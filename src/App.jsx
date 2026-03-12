@@ -20,6 +20,7 @@ import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts'
 import SpacedRepetition from './components/SpacedRepetition/SpacedRepetition';
 import { LayoutDashboard, Timer as TimerIcon, User, Loader, Sun, Moon } from 'lucide-react';
 import * as db from './lib/dataService';
+import { logger } from './lib/logger';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -67,7 +68,7 @@ function App() {
           });
           await SplashScreen.hide();
         } catch (e) {
-          console.warn('StatusBar/SplashScreen plugin not setup properly', e);
+          logger.warn('StatusBar/SplashScreen plugin not setup properly', e);
         }
       };
       
@@ -104,7 +105,7 @@ function App() {
           }
         }
       } catch (err) {
-        console.error('Failed to load sessions:', err);
+        logger.error('Failed to load sessions:', err);
         // Fallback to localStorage
         const saved = localStorage.getItem('study-tracker-sessions');
         if (saved) {
@@ -188,7 +189,7 @@ function App() {
       try {
         await db.insertSession(user.dbUserId, newSession);
       } catch (err) {
-        console.error('Failed to save session to Supabase:', err);
+        logger.error('Failed to save session to Supabase:', err);
       }
     }
 
@@ -202,7 +203,7 @@ function App() {
       try {
         await db.deleteSession(user.dbUserId, id);
       } catch (err) {
-        console.error('Failed to delete session from Supabase:', err);
+        logger.error('Failed to delete session from Supabase:', err);
       }
     }
   };
@@ -214,7 +215,7 @@ function App() {
       try {
         await db.updateSession(user.dbUserId, id, { duration: newDuration });
       } catch (err) {
-        console.error('Failed to update session in Supabase:', err);
+        logger.error('Failed to update session in Supabase:', err);
       }
     }
   };
@@ -228,7 +229,7 @@ function App() {
           await db.insertSession(user.dbUserId, session);
         }
       } catch (err) {
-        console.error('Failed to import sessions to Supabase:', err);
+        logger.error('Failed to import sessions to Supabase:', err);
       }
     }
   };
@@ -246,7 +247,7 @@ function App() {
       try {
         await db.clearAllUserData(user.dbUserId);
       } catch (err) {
-        console.error('Failed to clear data from Supabase:', err);
+        logger.error('Failed to clear data from Supabase:', err);
       }
     }
   };

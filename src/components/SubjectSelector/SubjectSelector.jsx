@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, Plus, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import * as db from '../../lib/dataService';
+import { logger } from '../../lib/logger';
 import './SubjectSelector.css';
 
 const defaultSubjects = [
@@ -50,7 +51,7 @@ const SubjectSelector = ({ currentSubject, onSelectSubject }) => {
                     setSubjects(defaultSubjects);
                     return;
                 } catch (err) {
-                    console.error('Failed to fetch subjects from Supabase:', err);
+                    logger.error('Failed to fetch subjects from Supabase:', err);
                 }
             }
             // Fallback: localStorage
@@ -89,7 +90,7 @@ const SubjectSelector = ({ currentSubject, onSelectSubject }) => {
 
             if (isOnline) {
                 try { await db.insertSubject(user.dbUserId, newSub); }
-                catch (err) { console.error('Failed to add subject to Supabase:', err); }
+                catch (err) { logger.error('Failed to add subject to Supabase:', err); }
             }
         }
     };

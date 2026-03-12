@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Target, Check } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import * as db from '../../lib/dataService';
+import { logger } from '../../lib/logger';
 import './DailyTarget.css';
 
 const DailyTarget = ({ sessions = [] }) => {
@@ -24,7 +25,7 @@ const DailyTarget = ({ sessions = [] }) => {
                         return;
                     }
                 } catch (err) {
-                    console.error('Failed to fetch settings:', err);
+                    logger.error('Failed to fetch settings:', err);
                 }
             }
             const saved = localStorage.getItem('study-tracker-daily-goal');
@@ -65,7 +66,7 @@ const DailyTarget = ({ sessions = [] }) => {
             try {
                 await db.upsertSettings(user.dbUserId, { dailyGoalMinutes: newGoal });
             } catch (err) {
-                console.error('Failed to save daily goal to Supabase:', err);
+                logger.error('Failed to save daily goal to Supabase:', err);
             }
         }
     };
