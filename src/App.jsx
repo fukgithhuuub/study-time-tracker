@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
 import Onboarding from './components/Onboarding/Onboarding';
@@ -35,6 +35,16 @@ function App() {
   const [loadingSessions, setLoadingSessions] = useState(false);
 
   // Refs for keyboard shortcuts to access current state
+  const activeTabRef = useRef(activeTab);
+  const currentSubjectRef = useRef(currentSubject);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    currentSubjectRef.current = currentSubject;
+  }, [currentSubject]);
 
   // ─── Keep-alive Supabase Ping ──────────────────────────────
   useEffect(() => {
