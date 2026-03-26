@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Settings, Coffee, Briefcase, Save, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import { fetchTimerState, upsertTimerState, subscribeToTimer } from '../../lib/dataService';
+import PiPTimer from '../PiPTimer/PiPTimer';
 import './Timer.css';
 
 const Timer = ({ onSessionComplete }) => {
@@ -421,6 +422,7 @@ const Timer = ({ onSessionComplete }) => {
         <div className="timer-container glass-panel animate-fade-in">
             {/* Mode Switcher */}
             <div className="timer-header">
+                <div className="timer-header-spacer" />
                 <div className="mode-toggle">
                     <button
                         className={`toggle-btn ${mode === 'stopwatch' ? 'active' : ''}`}
@@ -435,6 +437,12 @@ const Timer = ({ onSessionComplete }) => {
                         Pomodoro
                     </button>
                 </div>
+                <PiPTimer
+                    time={formatTime(mode === 'stopwatch' ? displayTime : timeLeft)}
+                    mode={mode}
+                    pomodoroState={pomodoroState}
+                    isActive={isActive}
+                />
             </div>
 
             {/* Pomodoro States */}
