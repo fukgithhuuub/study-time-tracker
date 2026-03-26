@@ -12,8 +12,14 @@
 .timer-header {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 2rem;
+}
+
+.timer-header-spacer {
+    width: 36px;
+    flex-shrink: 0;
 }
 
 .mode-toggle {
